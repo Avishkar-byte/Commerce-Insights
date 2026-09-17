@@ -245,7 +245,6 @@ def _detail(seller_id: str, match: dict) -> None:
 def render() -> None:
     """Draw the sellers page."""
     match = filters.render_sidebar()
-    ui.topbar()
     ui.notice(
         "Customer state and category filters do not apply here. Seller figures are "
         "all-time unless noted; the month filter applies only to the monthly trend."

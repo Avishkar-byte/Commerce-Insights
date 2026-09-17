@@ -28,3 +28,6 @@ docs/PROJECT_PLAN.md
 docs/design/*.png
 reports/screenshots/
 reports/REPORT_OUTLINE.md
+
+# Course report: contains team names and registration numbers.
+*.docx

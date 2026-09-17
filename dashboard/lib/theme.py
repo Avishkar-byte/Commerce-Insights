@@ -194,11 +194,32 @@ _CSS = f"""
         }}
         .stApp {{ background: var(--surface-lowest); }}
 
-        /* Streamlit's own header and footer are replaced by the design's own bar. */
-        header[data-testid="stHeader"] {{ display: none; }}
+        /* Hide the Deploy button and the hamburger menu, but keep the header
+           itself: it carries the control that reopens a collapsed sidebar.
+           Hiding the whole header strands the user with no way back. */
         [data-testid="stToolbar"] {{ display: none; }}
-        footer {{ display: none; }}
         #MainMenu {{ display: none; }}
+        footer {{ display: none; }}
+        header[data-testid="stHeader"] {{
+          background: transparent;
+          height: 2.5rem;
+          pointer-events: none;
+        }}
+        header[data-testid="stHeader"] * {{ pointer-events: auto; }}
+        /* The chevron shown when the sidebar is collapsed must always be
+           reachable, otherwise the filters become unreachable too. */
+        [data-testid="stSidebarCollapsedControl"] {{
+          display: flex !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }}
+        [data-testid="stSidebarCollapsedControl"] button,
+        [data-testid="stSidebarCollapseButton"] button {{
+          color: var(--on-surface);
+          background: var(--surface-low);
+          border: 1px solid var(--outline-variant);
+          border-radius: 4px;
+        }}
 
         /* ---- main column ---- */
         [data-testid="stMainBlockContainer"] {{

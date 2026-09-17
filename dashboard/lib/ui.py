@@ -30,21 +30,6 @@ def html(markup: str) -> None:
     )
 
 
-def topbar() -> None:
-    """Draw the thin header bar with the account avatar, as in the reference."""
-    html(
-        f"""
-        <div style="display:flex;align-items:center;justify-content:flex-end;
-                    height:56px;margin:-2.5rem -2.5rem 1.5rem -2.5rem;
-                    padding:0 2.5rem;border-bottom:1px solid {theme.OUTLINE_VARIANT};
-                    background:{theme.SURFACE_LOWEST}">
-          <div style="width:32px;height:32px;border-radius:9999px;
-                      background:{theme.PRIMARY};display:flex;align-items:center;
-                      justify-content:center;color:#fff;font-size:13px;font-weight:600">A</div>
-        </div>
-        """
-    )
-
 
 def page_title(title: str, subtitle: str, eyebrow: str | None = None) -> None:
     """Draw the page heading block.
@@ -170,7 +155,7 @@ def module_card(name: str, tag: str, description: str) -> None:
         f"""
         <div style="background:{theme.SURFACE_LOWEST};border:1px solid {theme.OUTLINE_VARIANT};
                     border-radius:8px;padding:20px;margin-bottom:12px;
-                    display:flex;align-items:center;justify-content:space-between;gap:24px">
+                    display:flex;flex-direction:column;gap:4px">
           <div style="display:flex;flex-direction:column;gap:4px">
             <div style="display:flex;align-items:center;gap:12px">
               <span style="font-size:16px;line-height:24px;font-weight:600;
@@ -183,8 +168,6 @@ def module_card(name: str, tag: str, description: str) -> None:
             <p style="font-size:14px;line-height:20px;color:{theme.SECONDARY};
                       margin:0">{description}</p>
           </div>
-          <span style="font-size:14px;line-height:20px;font-weight:500;
-                       color:{theme.PRIMARY};white-space:nowrap">Open page &rarr;</span>
         </div>
         """
     )

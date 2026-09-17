@@ -190,7 +190,6 @@ def _worst_categories(match: dict) -> None:
 def render() -> None:
     """Draw the satisfaction page."""
     match = filters.render_sidebar()
-    ui.topbar()
     ui.page_title(
         "Customer satisfaction",
         "Review scores from 1 to 5 stars, left after delivery.",

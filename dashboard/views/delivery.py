@@ -225,7 +225,6 @@ def _distance(match: dict) -> None:
 def render() -> None:
     """Draw the delivery page."""
     match = filters.render_sidebar()
-    ui.topbar()
     ui.page_title(
         "Delivery performance",
         "Where and why orders arrive after the estimated date.",

@@ -79,7 +79,6 @@ def _headline(match: dict) -> None:
 def render() -> None:
     """Draw the home page."""
     match = filters.render_sidebar()
-    ui.topbar()
     ui.page_title(
         "Executive overview",
         "Executive summary of Brazilian marketplace order analysis (2016-2018).",

@@ -160,7 +160,6 @@ def _states(match: dict) -> None:
 def render() -> None:
     """Draw the sales page."""
     match = filters.render_sidebar()
-    ui.topbar()
     ui.page_title(
         "Sales overview",
         "Revenue and orders for the selected period.",
