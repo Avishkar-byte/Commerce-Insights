@@ -194,32 +194,40 @@ _CSS = f"""
         }}
         .stApp {{ background: var(--surface-lowest); }}
 
-        /* Hide the Deploy button and the hamburger menu, but keep the header
-           itself: it carries the control that reopens a collapsed sidebar.
-           Hiding the whole header strands the user with no way back. */
-        [data-testid="stToolbar"] {{ display: none; }}
+        /* stToolbar holds the Deploy button, the hamburger menu AND the button
+           that reopens a collapsed sidebar. Hiding the toolbar wholesale takes
+           the sidebar control with it and leaves the filters unreachable, so
+           only the two unwanted items are hidden by name. */
+        [data-testid="stAppDeployButton"] {{ display: none; }}
+        [data-testid="stMainMenu"] {{ display: none; }}
         #MainMenu {{ display: none; }}
         footer {{ display: none; }}
         header[data-testid="stHeader"] {{
           background: transparent;
-          height: 2.5rem;
+          height: 2.75rem;
           pointer-events: none;
         }}
         header[data-testid="stHeader"] * {{ pointer-events: auto; }}
-        /* The chevron shown when the sidebar is collapsed must always be
-           reachable, otherwise the filters become unreachable too. */
-        [data-testid="stSidebarCollapsedControl"] {{
-          display: flex !important;
+        /* The chevron that reopens a collapsed sidebar, kept clearly visible
+           rather than relying on hover. */
+        [data-testid="stExpandSidebarButton"] {{
+          display: inline-flex !important;
           visibility: visible !important;
           opacity: 1 !important;
-        }}
-        [data-testid="stSidebarCollapsedControl"] button,
-        [data-testid="stSidebarCollapseButton"] button {{
-          color: var(--on-surface);
           background: var(--surface-low);
           border: 1px solid var(--outline-variant);
           border-radius: 4px;
+          color: var(--on-surface);
         }}
+        [data-testid="stExpandSidebarButton"]:hover {{
+          background: var(--surface-container);
+        }}
+        /* The matching collapse chevron inside the sidebar. */
+        [data-testid="stSidebarCollapseButton"] {{
+          opacity: 1 !important;
+          visibility: visible !important;
+        }}
+        [data-testid="stSidebarCollapseButton"] button {{ color: var(--on-surface); }}
 
         /* ---- main column ---- */
         [data-testid="stMainBlockContainer"] {{
