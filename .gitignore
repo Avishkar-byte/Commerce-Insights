@@ -1,0 +1,30 @@
+# Secrets
+.env
+secrets/
+
+# Data
+data/
+Dataset/
+*.parquet
+*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Spark
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Design source and build-process docs, kept locally but not published.
+# The README carries the technical detail and setup steps.
+UI/
+CLAUDE.md
+docs/PROJECT_PLAN.md
+docs/design/*.png
+reports/screenshots/
+reports/REPORT_OUTLINE.md

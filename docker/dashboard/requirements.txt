@@ -1,0 +1,5 @@
+# Pinned so a rebuild before the viva produces the same image.
+streamlit==1.64.0
+pymongo==4.18.1
+pandas==3.0.5
+plotly==7.1.0

@@ -1,0 +1,45 @@
+flowchart TB
+    subgraph HOST["Windows laptop (Intel i5, 8 GB RAM)"]
+        REPO["D:\Big_Data<br/>code, data/raw, secrets, .env"]
+        TASKS["tasks.ps1"]
+        BROWSER["Browser"]
+    end
+
+    subgraph DOCKER["Docker Desktop - WSL2 engine, capped at 4 GB"]
+        subgraph HDFSP["profile: hdfs"]
+            NN["namenode<br/>hdfs://namenode:8020<br/>UI 127.0.0.1:9870<br/>768 MB / heap 384m"]
+            DN1["datanode1<br/>UI 127.0.0.1:9864<br/>512 MB / heap 256m"]
+            DN2["datanode2<br/>UI 127.0.0.1:9865<br/>512 MB / heap 256m"]
+        end
+
+        subgraph JOBSP["profile: jobs"]
+            SPARK["spark<br/>PySpark 3.5, Java 17<br/>local[2], UI 127.0.0.1:4040<br/>1.8 GB"]
+        end
+
+        subgraph DBP["profile: db"]
+            MONGO["mongo 8.0<br/>127.0.0.1:27017<br/>olist_analytics<br/>768 MB"]
+        end
+
+        subgraph SERVEP["profile: serve"]
+            DASH["dashboard<br/>Streamlit + Plotly<br/>127.0.0.1:8501<br/>512 MB"]
+        end
+    end
+
+    REPO -->|"./data/raw mounted read-only at /staging"| NN
+    TASKS --> NN
+    TASKS --> SPARK
+    TASKS --> MONGO
+    TASKS --> DASH
+
+    NN <-->|"replication factor 2"| DN1
+    NN <-->|"replication factor 2"| DN2
+
+    SPARK -->|"raw to silver to gold, Parquet"| NN
+    SPARK -->|"olist_pipeline, readWrite"| MONGO
+    MONGO -->|"olist_dashboard, read-only<br/>server-side $match / $group"| DASH
+    DASH --> BROWSER
+
+    classDef store fill:#EEF2F6,stroke:#1F5FAD,color:#16213E
+    classDef compute fill:#FFFFFF,stroke:#8A94A6,color:#16213E
+    class NN,DN1,DN2,MONGO store
+    class SPARK,DASH compute

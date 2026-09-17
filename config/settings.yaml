@@ -1,0 +1,103 @@
+# Olist pipeline configuration.
+# No host, path, window or bucket edge is hard-coded anywhere else.
+
+hdfs:
+  # Actual cluster address comes from the HDFS_URL environment variable
+  # (set per container in docker-compose.yml) so nothing is pinned here.
+  url_env: HDFS_URL
+  # Must match dfs.replication in docker-compose.yml. The Spark container has no
+  # hdfs-site.xml, so without this the HDFS client would create files with
+  # Hadoop's default of 3 replicas. With only two DataNodes that target can never
+  # be met, and every Spark-written block is reported under-replicated forever.
+  replication: 2
+  root: /olist
+  raw: /olist/raw
+  silver: /olist/silver
+  gold: /olist/gold
+
+# data/raw is mounted read-only into the namenode container at this path.
+staging_dir: /staging
+
+analysis_window:
+  start: "2017-01"
+  end: "2018-08"
+
+spark:
+  app_name: olist-pipeline
+  master: "local[2]"
+  driver_memory: 1g
+  shuffle_partitions: 8
+  max_result_size: 256m
+  timezone: UTC
+  # Verify the newest 10.x on Maven Central before a release run.
+  mongo_connector: org.mongodb.spark:mongo-spark-connector_2.12:10.5.0
+
+geo:
+  # Brazil bounding box; points outside it are dropped before averaging.
+  bbox:
+    lat_min: -35.0
+    lat_max: 5.5
+    lng_min: -74.0
+    lng_max: -34.0
+  earth_radius_km: 6371.0
+
+# delay_days <= 0 is "On time"; edges are inclusive upper bounds in days.
+delay:
+  edges: [0, 3, 7, 14]
+  labels:
+    - "On time"
+    - "1–3 days late"
+    - "4–7 days late"
+    - "8–14 days late"
+    - "15+ days late"
+  not_delivered_label: "Not delivered"
+
+# Inclusive upper bounds in kilometres.
+distance:
+  edges_km: [100, 500, 1000, 2000]
+  labels:
+    - "<100"
+    - "100–500"
+    - "500–1000"
+    - "1000–2000"
+    - "2000+"
+  unknown_label: "unknown"
+
+# Kaggle CSV file name -> HDFS table folder name.
+# tasks.ps1 reads this block for the ingest loop; keep it flat "file: table".
+raw_files:
+  olist_customers_dataset.csv: customers
+  olist_orders_dataset.csv: orders
+  olist_order_items_dataset.csv: order_items
+  olist_order_payments_dataset.csv: order_payments
+  olist_order_reviews_dataset.csv: order_reviews
+  olist_products_dataset.csv: products
+  olist_sellers_dataset.csv: sellers
+  olist_geolocation_dataset.csv: geolocation
+  product_category_name_translation.csv: category_translation
+
+kaggle_dataset: olistbr/brazilian-ecommerce
+
+silver_tables:
+  - customers
+  - sellers
+  - products
+  - geo_zip
+  - orders_fact
+  - items_fact
+
+gold_collections:
+  - order_metrics
+  - delivery_distance
+  - review_by_delay
+  - payment_mix
+  - seller_scorecard
+
+# Expected counts asserted by pipeline/jobs/validate.py.
+validation:
+  expected_orders: 99441
+  expected_customers: 99441
+  expected_distinct_customer_unique_id: 96096
+  gmv_tolerance: 0.01
+  min_delivered_orders_for_map: 100
+  min_reviews_for_category: 200

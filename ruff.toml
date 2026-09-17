@@ -1,0 +1,42 @@
+# Ruff configuration.
+#
+# The rule set is selected explicitly so that upgrading ruff cannot silently
+# change what "lint" means for this project.
+
+line-length = 100
+target-version = "py311"
+extend-exclude = ["notebooks"]
+
+[lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # import sorting
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "C4",   # flake8-comprehensions
+    "SIM",  # flake8-simplify
+    "D",    # pydocstyle: CLAUDE.md requires docstrings on public functions
+]
+
+# The flake8-executable rules (EXE) are deliberately NOT selected. The repo is
+# bind-mounted into the container from Windows, where every file is reported as
+# mode 0755, so EXE001/EXE002 fire on every file regardless of its content.
+
+ignore = [
+    "D203",  # incompatible with D211 (no blank line before class docstring)
+    "D213",  # incompatible with D212 (summary on the first line)
+]
+
+[lint.pydocstyle]
+convention = "pep257"
+
+[lint.per-file-ignores]
+# Test functions are self-describing; module docstrings are still required.
+"tests/*" = ["D103"]
+
+[lint.isort]
+# lib is dashboard/lib on the pytest and container PYTHONPATH, so it must be
+# grouped as first-party rather than as an installed package.
+known-first-party = ["pipeline", "lib", "dashboard"]

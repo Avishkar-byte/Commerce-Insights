@@ -1,0 +1,164 @@
+name: olist
+
+# Shared HDFS configuration. The apache/hadoop image converts environment
+# variables of the form <FILE>.<EXT>_<property> into <file>.<ext> in
+# HADOOP_CONF_DIR, via /opt/envtoconf.py called from /opt/starter.sh.
+x-hadoop-env: &hadoop-env
+  CORE-SITE.XML_fs.defaultFS: hdfs://namenode:8020
+  HDFS-SITE.XML_dfs.replication: "2"
+  HDFS-SITE.XML_dfs.permissions.enabled: "false"
+  HDFS-SITE.XML_dfs.namenode.name.dir: /hadoop/dfs/name
+  HDFS-SITE.XML_dfs.datanode.data.dir: /hadoop/dfs/data
+  HDFS-SITE.XML_dfs.namenode.heartbeat.recheck-interval: "30000"
+  HDFS-SITE.XML_dfs.namenode.rpc-bind-host: "0.0.0.0"
+  HDFS-SITE.XML_dfs.namenode.datanode.registration.ip-hostname-check: "false"
+
+services:
+  namenode:
+    image: apache/hadoop:3.3.6
+    hostname: namenode
+    user: root
+    command: ["hdfs", "namenode"]
+    environment:
+      <<: *hadoop-env
+      # starter.sh formats only when this directory does NOT exist. The volume is
+      # mounted at the parent (/hadoop/dfs) so that /hadoop/dfs/name is absent on
+      # the very first start and present on every start after it.
+      ENSURE_NAMENODE_DIR: /hadoop/dfs/name
+      HDFS_NAMENODE_OPTS: -Xmx384m
+    volumes:
+      - nn:/hadoop/dfs
+      - ./data/raw:/staging:ro
+    ports:
+      - "127.0.0.1:9870:9870"
+    mem_limit: 768m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9870/ > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 40s
+    networks: [olist-net]
+    profiles: [hdfs]
+
+  datanode1:
+    image: apache/hadoop:3.3.6
+    hostname: datanode1
+    user: root
+    command: ["hdfs", "datanode"]
+    environment:
+      <<: *hadoop-env
+      HDFS_DATANODE_OPTS: -Xmx256m
+    volumes:
+      - dn1:/hadoop/dfs
+    ports:
+      - "127.0.0.1:9864:9864"
+    mem_limit: 512m
+    depends_on:
+      namenode:
+        condition: service_healthy
+    networks: [olist-net]
+    profiles: [hdfs]
+
+  datanode2:
+    image: apache/hadoop:3.3.6
+    hostname: datanode2
+    user: root
+    command: ["hdfs", "datanode"]
+    environment:
+      <<: *hadoop-env
+      HDFS_DATANODE_OPTS: -Xmx256m
+    volumes:
+      - dn2:/hadoop/dfs
+    ports:
+      - "127.0.0.1:9865:9864"
+    mem_limit: 512m
+    depends_on:
+      namenode:
+        condition: service_healthy
+    networks: [olist-net]
+    profiles: [hdfs]
+
+  spark:
+    build:
+      context: ./docker/spark
+    image: olist-spark:latest
+    working_dir: /workspace
+    environment:
+      HDFS_URL: hdfs://namenode:8020
+      MONGO_URI_PIPELINE: mongodb://olist_pipeline:${OLIST_PIPELINE_PASSWORD}@mongo:27017/${MONGO_DB}?authSource=${MONGO_DB}
+      MONGO_DB: ${MONGO_DB}
+      KAGGLE_CONFIG_DIR: /workspace/secrets
+      PYTHONPATH: /workspace:/workspace/dashboard
+    volumes:
+      - .:/workspace
+      - ivy-cache:/root/.ivy2
+    ports:
+      - "127.0.0.1:4040:4040"
+      - "127.0.0.1:8888:8888"
+    mem_limit: 1800m
+    networks: [olist-net]
+    profiles: [jobs]
+
+  mongo:
+    image: mongo:8.0
+    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
+      MONGO_DB: ${MONGO_DB}
+      OLIST_PIPELINE_PASSWORD: ${OLIST_PIPELINE_PASSWORD}
+      OLIST_DASHBOARD_PASSWORD: ${OLIST_DASHBOARD_PASSWORD}
+    volumes:
+      - mongo-data:/data/db
+      - ./docker/mongo-init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:27017:27017"
+    mem_limit: 768m
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    networks: [olist-net]
+    profiles: [db]
+
+  dashboard:
+    build:
+      context: ./docker/dashboard
+    image: olist-dashboard:latest
+    environment:
+      MONGO_URI: mongodb://olist_dashboard:${OLIST_DASHBOARD_PASSWORD}@mongo:27017/${MONGO_DB}?authSource=${MONGO_DB}
+      MONGO_DB: ${MONGO_DB}
+    command:
+      - streamlit
+      - run
+      - app.py
+      - --server.address=0.0.0.0
+      - --server.port=8501
+      - --server.runOnSave=true
+      - --browser.gatherUsageStats=false
+    volumes:
+      - ./dashboard:/app
+    ports:
+      - "${DASHBOARD_BIND:-127.0.0.1}:8501:8501"
+    mem_limit: 512m
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks: [olist-net]
+    profiles: [serve]
+
+networks:
+  olist-net:
+    name: olist-net
+
+volumes:
+  nn:
+  dn1:
+  dn2:
+  mongo-data:
+  ivy-cache:

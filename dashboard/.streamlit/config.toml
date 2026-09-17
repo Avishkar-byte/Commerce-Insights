@@ -1,0 +1,14 @@
+# Palette from the reference design in UI/ (the Tailwind config in each code.html).
+[theme]
+base = "light"
+primaryColor = "#1f5fad"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#eff3ff"
+textColor = "#121c2a"
+font = "sans serif"
+
+[browser]
+gatherUsageStats = false
+
+[server]
+headless = true

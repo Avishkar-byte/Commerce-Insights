@@ -1,0 +1,8 @@
+# Streamlit dashboard. Reads only from MongoDB; never imports pyspark.
+FROM python:3.11-slim-bookworm
+
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+WORKDIR /app
+EXPOSE 8501
