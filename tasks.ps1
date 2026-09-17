@@ -303,6 +303,14 @@ function Invoke-MongoCheck {
     if ($LASTEXITCODE -ne 0) { throw "mongo-check failed (exit $LASTEXITCODE)" }
 }
 
+function Invoke-SparkUi {
+    Write-Step "Running Spark work, then holding the Spark UI open for screenshots"
+    Write-Note "The Spark UI only exists while a job runs, so this job deliberately"
+    Write-Note "stays alive after finishing. Open http://localhost:4040 when prompted."
+    Write-Note "Press Ctrl+C when you have the screenshots."
+    Invoke-SparkJob -Arguments (@("python", "-m", "pipeline.jobs.sparkui") + $Rest)
+}
+
 function Invoke-Notebook {
     Write-Step "Starting Jupyter Lab in the spark container"
     Write-Note "Open http://localhost:8888 and use the token printed below. Ctrl+C to stop."
@@ -403,7 +411,8 @@ Checks and tools
   lint               ruff check .
   hdfs <args>        run an hdfs command, e.g. hdfs dfs -ls -R /olist
   mongo-check        list MongoDB collections with document counts
-  notebook           Jupyter Lab on http://localhost:8888
+  sparkui [--minutes N]  run Spark work and hold the Spark UI open at :4040
+  notebook           Jupyter Lab on http://localhost:8888 (blocks until Ctrl+C)
   shell              bash inside the spark container
   failover-demo      stop a DataNode, prove reads still work, restart it
   reset-hdfs         delete /olist after confirmation (volumes are kept)
@@ -431,6 +440,7 @@ try {
         "lint"          { Invoke-Lint }
         "hdfs"          { Invoke-Hdfs }
         "mongo-check"   { Invoke-MongoCheck }
+        "sparkui"       { Invoke-SparkUi }
         "notebook"      { Invoke-Notebook }
         "shell"         { Invoke-Shell }
         "failover-demo" { Invoke-FailoverDemo }
